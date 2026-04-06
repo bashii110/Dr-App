@@ -1,62 +1,77 @@
-import 'package:doctor_app/auth/login_screen.dart';
-import 'package:doctor_app/auth/registration_screen.dart';
-import 'package:doctor_app/screens/doctors_details.dart';
-import 'package:doctor_app/utils/config.dart';
-import 'package:doctor_app/utils/main_layout.dart';
+import 'package:doctor_app/provider/auth_provider.dart';
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
+import 'utils/config.dart';
+import 'utils/main_layout.dart';
+import 'auth/login_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  //For push Navigator
-  static final navigatorKey= GlobalKey<NavigatorState>();
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: navigatorKey,
       title: 'Doctor App',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        inputDecorationTheme: const InputDecorationTheme(
-          focusColor: Config.primaryColor,
-          border: Config.outlinedInputBorder,
-          focusedBorder: Config.focusedBorder,
-          errorBorder: Config.errorBorder,
-          enabledBorder: Config.outlinedInputBorder,
-          floatingLabelStyle: TextStyle(
-            color: Config.primaryColor,
-          ),
-          prefixIconColor: Colors.black38,
-        ),
-        scaffoldBackgroundColor: Colors.white,
-        bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          backgroundColor: Config.primaryColor,
-          selectedItemColor: Colors.white,
-          showSelectedLabels: true,
-          showUnselectedLabels: false,
-          unselectedItemColor: Colors.grey.shade700,
-          elevation: 10,
-          type: BottomNavigationBarType.fixed
-        ),
-
-      ),
-      // initialRoute: "/",
-      // routes: {
-      //   //This is the initial route of the application
-      //   '/': (context) => const AuthScreen(),
-      //   'main':(context) => const MainLayout(),
-      //   "doc_details" : (context) => const DoctorsDetails(),
-      // },
-
-      home: LoginScreen(),
+      theme: Config.theme,
+      home: const _AuthRouter(),
     );
   }
 }
 
+// Listens to AuthProvider and routes to the right screen.
+class _AuthRouter extends StatefulWidget {
+  const _AuthRouter();
+  @override
+  State<_AuthRouter> createState() => _AuthRouterState();
+}
+
+class _AuthRouterState extends State<_AuthRouter> {
+  @override
+  void initState() {
+    super.initState();
+    // Check for a saved token on app start
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().checkAuth();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
+    switch (auth.status) {
+      case AuthStatus.unknown:
+      // Splash / loading
+        return const Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.medical_services_rounded,
+                    size: 64, color: Config.primaryColor),
+                SizedBox(height: 24),
+                CircularProgressIndicator(color: Config.primaryColor),
+              ],
+            ),
+          ),
+        );
+
+      case AuthStatus.authenticated:
+        return const MainLayout();
+
+      case AuthStatus.unauthenticated:
+        return const LoginScreen();
+    }
+  }
+}
