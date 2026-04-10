@@ -14,10 +14,10 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> j) => UserModel(
-    id:      j['id'] as int,
-    name:    j['name'] as String,
-    email:   j['email'] as String,
-    type:    j['type'] as String,
+    id: j['id'] ?? 0,
+    name: j['name'] ?? '',
+    email: j['email'] ?? '',
+    type: j['type'] ?? '',
     profile: j['profile'] as Map<String, dynamic>?,
   );
 
@@ -60,11 +60,11 @@ class DoctorModel {
     return DoctorModel(
       id:              j['id'] as int,
       docId:           j['doc_id'] as int,
-      name:            user?['name'] as String?,
-      category:        j['category'] as String?,
-      experience:      j['experience'] as int?,
+      name: user?['name'] ?? '',
+      category: j['category'] ?? '',
+      experience: j['experience'] ?? 0,
       bioData:         j['bio_data'] as String?,
-      status:          j['status'] as String?,
+      status: j['status'] ?? '',
       rating:          (j['rating'] as num?)?.toDouble() ?? 0,
       ratingCount:     j['rating_count'] as int? ?? 0,
       consultationFee: (j['consultation_fee'] as num?)?.toDouble() ?? 0,
@@ -101,20 +101,30 @@ class AppointmentModel {
     this.patient,
   });
 
-  factory AppointmentModel.fromJson(Map<String, dynamic> j) => AppointmentModel(
-    id:               j['id'] as int,
-    patientId:        j['patient_id'] as int,
-    doctorId:         j['doctor_id'] as int,
-    appointmentDate:  j['appointment_date'] as String,
-    appointmentTime:  j['appointment_time'] as String,
-    status:           j['status'] as String,
-    notes:            j['notes'] as String?,
-    consultationFee:  (j['consultation_fee'] as num?)?.toDouble() ?? 0,
-    doctor: j['doctor'] != null
-        ? DoctorModel.fromJson(j['doctor'] as Map<String, dynamic>)
-        : null,
-    patient: j['patient'] as Map<String, dynamic>?,
-  );
+  factory AppointmentModel.fromJson(Map<String, dynamic> j) =>
+      AppointmentModel(
+        id: int.tryParse(j['id']?.toString() ?? '0') ?? 0,
+        patientId: int.tryParse(j['patient_id']?.toString() ?? '0') ?? 0,
+        doctorId: int.tryParse(j['doctor_id']?.toString() ?? '0') ?? 0,
+
+        appointmentDate: j['date']?.toString() ?? '',
+        appointmentTime: j['time']?.toString() ?? '',
+        status: j['status']?.toString() ?? '',
+
+        notes: j['notes']?.toString(),
+
+        consultationFee:
+        double.tryParse(j['fee']?.toString() ?? '0') ?? 0,
+
+        doctor: j['doctor'] != null
+            ? DoctorModel.fromJson(
+            Map<String, dynamic>.from(j['doctor']))
+            : null,
+
+        patient: j['patient'] != null
+            ? Map<String, dynamic>.from(j['patient'])
+            : null,
+      );
 
   bool get isPending   => status == 'pending';
   bool get isConfirmed => status == 'confirmed';
@@ -147,9 +157,9 @@ class ReviewModel {
     id:          j['id'] as int,
     patientId:   j['patient_id'] as int,
     doctorId:    j['doctor_id'] as int,
-    rating:      (j['rating'] as num).toDouble(),
-    comment:     j['comment'] as String?,
-    patientName: (j['patient'] as Map<String, dynamic>?)?['name'] as String?,
-    createdAt:   j['created_at'] as String,
+    rating: (j['rating'] as num?)?.toDouble() ?? 0,
+    comment: j['comment'],
+    patientName: (j['patient']?['name']) ?? '',
+    createdAt: j['created_at'] ?? '',
   );
 }

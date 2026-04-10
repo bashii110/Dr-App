@@ -34,18 +34,27 @@ class _PatientAppointmentsScreenState extends State<PatientAppointmentsScreen>
 
   Future<void> _load() async {
     setState(() => _loading = true);
+
     try {
       final res = await ApiService.getMyAppointments();
-      setState(() {
-        if (res['status'] == 200) {
-          final items = (res['data'] as Map)['data'] as List;
-          _all = items.map((e) => AppointmentModel.fromJson(e as Map<String, dynamic>)).toList();
-        }
-        _loading = false;
-      });
-    } catch (_) {
-      setState(() => _loading = false);
+
+      print("API RESPONSE: $res"); // 👈 check console
+
+      if (res['status'].toString() == '200') {
+        final List raw = res['appointments'] ?? [];
+
+        _all = raw
+            .map((e) => AppointmentModel.fromJson(e))
+            .toList();
+      }
+
+      print("TOTAL APPOINTMENTS: ${_all.length}");
+      print("RAW ITEM: ${res['appointments'][0]}");
+    } catch (e) {
+      print("ERROR: $e");
     }
+
+    setState(() => _loading = false);
   }
 
   Future<void> _cancel(int id) async {
