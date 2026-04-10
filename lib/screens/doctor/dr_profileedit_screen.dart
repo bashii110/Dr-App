@@ -89,6 +89,7 @@ class _DoctorProfileEditScreenState extends State<DoctorProfileEditScreen> {
     setState(() => _saving = true);
     try {
       final res = await ApiService.updateDoctorProfile({
+
         if (_category != null) 'category': _category,
         'bio_data':         _bioCtrl.text.trim(),
         'consultation_fee': double.tryParse(_feeCtrl.text) ?? 0,
@@ -97,6 +98,7 @@ class _DoctorProfileEditScreenState extends State<DoctorProfileEditScreen> {
         'available_from':   _fmt(_availFrom),
         'available_to':     _fmt(_availTo),
       });
+      print("UPDATE RESPONSE: $res");
       if (!mounted) return;
       setState(() => _saving = false);
       if (res['status'] == 200) {
@@ -109,9 +111,10 @@ class _DoctorProfileEditScreenState extends State<DoctorProfileEditScreen> {
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Update failed. Please try again.'),
-              backgroundColor: Config.errorColor),
+          SnackBar(
+            content: Text(res['message']?.toString() ?? 'Update failed'),
+            backgroundColor: Config.errorColor,
+          ),
         );
       }
     } catch (_) {

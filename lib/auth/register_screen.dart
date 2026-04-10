@@ -78,174 +78,174 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                  const Text('Create account',
-                  style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: Config.textDark)),
-              const SizedBox(height: 6),
-              const Text('Fill in your details to get started.',
-                  style: TextStyle(fontSize: 15, color: Config.textMid)),
-              const SizedBox(height: 28),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Create account',
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Config.textDark)),
+                const SizedBox(height: 6),
+                const Text('Fill in your details to get started.',
+                    style: TextStyle(fontSize: 15, color: Config.textMid)),
+                const SizedBox(height: 28),
 
-              // ── Role selector ──────────────────────────────────────────
-              const Text('I am a…',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Config.textDark)),
-              const SizedBox(height: 10),
-              Row(children: [
-                _RoleCard(
-                  selected:  _userType == 'patient',
-                  label:     'Patient',
-                  icon:      Icons.person_outline_rounded,
-                  subtitle:  'Book appointments',
-                  onTap: () => setState(() => _userType = 'patient'),
-                ),
-                const SizedBox(width: 12),
-                _RoleCard(
-                  selected:  _userType == 'doctor',
-                  label:     'Doctor',
-                  icon:      Icons.medical_services_outlined,
-                  subtitle:  'Manage your practice',
-                  onTap: () => setState(() => _userType = 'doctor'),
-                ),
-              ]),
-              const SizedBox(height: 24),
+                // ── Role selector ──────────────────────────────────────────
+                const Text('I am a…',
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Config.textDark)),
+                const SizedBox(height: 10),
+                Row(children: [
+                  _RoleCard(
+                    selected:  _userType == 'patient',
+                    label:     'Patient',
+                    icon:      Icons.person_outline_rounded,
+                    subtitle:  'Book appointments',
+                    onTap: () => setState(() => _userType = 'patient'),
+                  ),
+                  const SizedBox(width: 12),
+                  _RoleCard(
+                    selected:  _userType == 'doctor',
+                    label:     'Doctor',
+                    icon:      Icons.medical_services_outlined,
+                    subtitle:  'Manage your practice',
+                    onTap: () => setState(() => _userType = 'doctor'),
+                  ),
+                ]),
+                const SizedBox(height: 24),
 
-              // ── Form ───────────────────────────────────────────────────
-              Form(
+                // ── Form ───────────────────────────────────────────────────
+                Form(
                   key: _formKey,
                   child: Column(
                     children: [
-                    TextFormField(
-                    controller: _nameCtrl,
-                    textCapitalization: TextCapitalization.words,
-                    textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(
-                      labelText: _userType == 'doctor'
-                          ? 'Full name (as registered)'
-                          : 'Full name',
-                      prefixIcon: const Icon(Icons.person_outline),
-                    ),
-                    validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Name is required' : null,
-                  ),
-                  Config.spaceSmall,
-                  TextFormField(
-                    controller: _emailCtrl,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Email is required';
-                      if (!v.contains('@')) return 'Enter a valid email';
-                      return null;
-                    },
-                  ),
-                  Config.spaceSmall,
-                  TextFormField(
-                    controller: _passCtrl,
-                    obscureText: _obscure,
-                    textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(_obscure
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined),
-                        onPressed: () =>
-                            setState(() => _obscure = !_obscure),
+                      TextFormField(
+                        controller: _nameCtrl,
+                        textCapitalization: TextCapitalization.words,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: _userType == 'doctor'
+                              ? 'Full name (as registered)'
+                              : 'Full name',
+                          prefixIcon: const Icon(Icons.person_outline),
+                        ),
+                        validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Name is required' : null,
                       ),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Password is required';
-                      if (v.length < 6) return 'Minimum 6 characters';
-                      return null;
-                    },
-                  ),
-                  Config.spaceSmall,
-                  TextFormField(
-                    controller: _confirmCtrl,
-                    obscureText: _obscure,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _submit(),
-                    decoration: const InputDecoration(
-                      labelText: 'Confirm password',
-                      prefixIcon: Icon(Icons.lock_outline),
-                    ),
-                    validator: (v) {
-                      if (v != _passCtrl.text) return 'Passwords do not match';
-                      return null;
-                    },
-                  ),
+                      Config.spaceSmall,
+                      TextFormField(
+                        controller: _emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Email is required';
+                          if (!v.contains('@')) return 'Enter a valid email';
+                          return null;
+                        },
+                      ),
+                      Config.spaceSmall,
+                      TextFormField(
+                        controller: _passCtrl,
+                        obscureText: _obscure,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscure
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
+                          ),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Password is required';
+                          if (v.length < 6) return 'Minimum 6 characters';
+                          return null;
+                        },
+                      ),
+                      Config.spaceSmall,
+                      TextFormField(
+                        controller: _confirmCtrl,
+                        obscureText: _obscure,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => _submit(),
+                        decoration: const InputDecoration(
+                          labelText: 'Confirm password',
+                          prefixIcon: Icon(Icons.lock_outline),
+                        ),
+                        validator: (v) {
+                          if (v != _passCtrl.text) return 'Passwords do not match';
+                          return null;
+                        },
+                      ),
 
-                  // Doctor-specific hint
-                  if (_userType == 'doctor') ...[
-              const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Config.primaryColor.withOpacity(0.06),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Row(
-                children: [
-                Icon(Icons.info_outline,
-                size: 18, color: Config.primaryColor),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                  'After registration you will be able to fill in your specialisation, availability, and consultation fee.',
-              style: TextStyle(
-              fontSize: 12, color: Config.primaryColor),
+                      // Doctor-specific hint
+                      if (_userType == 'doctor') ...[
+                        const SizedBox(height: 14),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Config.primaryColor.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.info_outline,
+                                  size: 18, color: Config.primaryColor),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'After registration you will be able to fill in your specialisation, availability, and consultation fee.',
+                                  style: TextStyle(
+                                      fontSize: 12, color: Config.primaryColor),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      Config.spaceMedium,
+                      PrimaryButton(
+                        label: 'Create Account',
+                        loading: auth.loading,
+                        onPressed: _submit,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('Already have an account? ',
+                        style: TextStyle(color: Config.textMid)),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Text('Sign In',
+                          style: TextStyle(
+                              color: Config.primaryColor,
+                              fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ],
             ),
           ),
-          ],
         ),
       ),
-      ],
-
-    Config.spaceMedium,
-    PrimaryButton(
-    label: 'Create Account',
-    loading: auth.loading,
-    onPressed: _submit,
-    ),
-    ],
-    ),
-    ),
-
-    const SizedBox(height: 24),
-    Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-    const Text('Already have an account? ',
-    style: TextStyle(color: Config.textMid)),
-    GestureDetector(
-    onTap: () => Navigator.pop(context),
-    child: const Text('Sign In',
-    style: TextStyle(
-    color: Config.primaryColor,
-    fontWeight: FontWeight.w700)),
-    ),
-    ],
-    ),
-    const SizedBox(height: 24),
-    ],
-    ),
-    ),
-    ),
-    ),
     );
   }
 }
