@@ -60,14 +60,15 @@ class DoctorModel {
     return DoctorModel(
       id:              j['id'] as int,
       docId:           j['doc_id'] as int,
-      name: user?['name'] ?? '',
-      category: j['category'] ?? '',
-      experience: j['experience'] ?? 0,
+      name:            user?['name'] ?? j['name'] ?? '',
+      category:        j['category'] ?? '',
+      experience:      j['experience'] ?? 0,
       bioData:         j['bio_data'] as String?,
-      status: j['status'] ?? '',
+      status:          j['status'] ?? '',
       rating:          (j['rating'] as num?)?.toDouble() ?? 0,
       ratingCount:     j['rating_count'] as int? ?? 0,
-      consultationFee: (j['consultation_fee'] as num?)?.toDouble() ?? 0,
+      consultationFee: (j['consultation_fee'] as num?)?.toDouble() ??
+          (j['fee'] as num?)?.toDouble() ?? 0,
       availableFrom:   j['available_from'] as String?,
       availableTo:     j['available_to'] as String?,
     );
@@ -103,22 +104,22 @@ class AppointmentModel {
 
   factory AppointmentModel.fromJson(Map<String, dynamic> j) =>
       AppointmentModel(
-        id: int.tryParse(j['id']?.toString() ?? '0') ?? 0,
+        id:        int.tryParse(j['id']?.toString() ?? '0') ?? 0,
         patientId: int.tryParse(j['patient_id']?.toString() ?? '0') ?? 0,
-        doctorId: int.tryParse(j['doctor_id']?.toString() ?? '0') ?? 0,
+        doctorId:  int.tryParse(j['doctor_id']?.toString() ?? '0') ?? 0,
 
-        appointmentDate: j['date']?.toString() ?? '',
-        appointmentTime: j['time']?.toString() ?? '',
-        status: j['status']?.toString() ?? '',
+        // ✅ fixed keys to match API response
+        appointmentDate: j['appointment_date']?.toString() ?? '',
+        appointmentTime: j['appointment_time']?.toString() ?? '',
+        status:          j['status']?.toString() ?? '',
+        notes:           j['notes']?.toString(),
 
-        notes: j['notes']?.toString(),
-
-        consultationFee:
-        double.tryParse(j['fee']?.toString() ?? '0') ?? 0,
+        // ✅ try both keys
+        consultationFee: double.tryParse(
+            (j['consultation_fee'] ?? j['fee'])?.toString() ?? '0') ?? 0,
 
         doctor: j['doctor'] != null
-            ? DoctorModel.fromJson(
-            Map<String, dynamic>.from(j['doctor']))
+            ? DoctorModel.fromJson(Map<String, dynamic>.from(j['doctor']))
             : null,
 
         patient: j['patient'] != null
@@ -157,9 +158,12 @@ class ReviewModel {
     id:          j['id'] as int,
     patientId:   j['patient_id'] as int,
     doctorId:    j['doctor_id'] as int,
-    rating: (j['rating'] as num?)?.toDouble() ?? 0,
-    comment: j['comment'],
-    patientName: (j['patient']?['name']) ?? '',
-    createdAt: j['created_at'] ?? '',
+    rating:      (j['rating'] as num?)?.toDouble() ?? 0,
+    comment:     j['comment'] as String?,
+    // ✅ handle both patient_name (flat) and patient.name (nested)
+    patientName: j['patient_name'] as String? ??
+        (j['patient'] as Map<String, dynamic>?)?['name'] as String? ??
+        'Anonymous',
+    createdAt:   j['created_at']?.toString() ?? '',
   );
 }

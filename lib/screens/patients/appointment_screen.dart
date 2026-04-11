@@ -38,20 +38,14 @@ class _PatientAppointmentsScreenState extends State<PatientAppointmentsScreen>
     try {
       final res = await ApiService.getMyAppointments();
 
-      print("API RESPONSE: $res"); // 👈 check console
-
-      if (res['status'].toString() == '200') {
-        final List raw = res['appointments'] ?? [];
-
-        _all = raw
-            .map((e) => AppointmentModel.fromJson(e))
+      if (res['status'] == 200) {
+        final List items = ((res['data'] as Map)['data'] as List);
+        _all = items
+            .map((e) => AppointmentModel.fromJson(e as Map<String, dynamic>))
             .toList();
       }
-
-      print("TOTAL APPOINTMENTS: ${_all.length}");
-      print("RAW ITEM: ${res['appointments'][0]}");
     } catch (e) {
-      print("ERROR: $e");
+      debugPrint("ERROR loading appointments: $e");
     }
 
     setState(() => _loading = false);
