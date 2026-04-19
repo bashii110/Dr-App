@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import '../models/app_models.dart';
 import '../service/api_service.dart';
@@ -19,21 +21,53 @@ class AuthProvider extends ChangeNotifier {
   // ── Startup ───────────────────────────────────────────────────────────────
 
   Future<void> checkAuth() async {
+    _status = AuthStatus.unknown;
+    notifyListeners();
+
     final token = await ApiService.getToken();
-    if (token == null) { _status = AuthStatus.unauthenticated; notifyListeners(); return; }
+
+    if (token == null) {
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return;
+    }
+
     try {
       final res = await ApiService.getMe();
+
       if (res['status'] == 200) {
-        _user   = UserModel.fromJson(res['user'] as Map<String, dynamic>);
-        _status = AuthStatus.authenticated;
-      } else {
+        final userData = res['user'];
+        if (userData != null) {
+          _user   = UserModel.fromJson(userData as Map<String, dynamic>);
+          _status = AuthStatus.authenticated;
+        } else {
+          await ApiService.clearSession();
+          _user   = null;
+          _status = AuthStatus.unauthenticated;
+        }
+      } else if (res['status'] == 401) {
+        // Token expired or invalid
         await ApiService.clearSession();
+        _user   = null;
+        _status = AuthStatus.unauthenticated;
+      } else {
+        // Other server error — keep user logged in if token exists
+        // to avoid logging out on temporary server issues
         _status = AuthStatus.unauthenticated;
       }
-    } catch (_) {
+    } on TimeoutException {
+      // Network timeout — don't clear session, just mark unauthenticated
+      // user can retry by reopening app
+      _user   = null;
       _status = AuthStatus.unauthenticated;
+    } catch (e) {
+      // Unknown error — clear session to be safe
+      await ApiService.clearSession();
+      _user   = null;
+      _status = AuthStatus.unauthenticated;
+    } finally {
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   // ── Register ──────────────────────────────────────────────────────────────

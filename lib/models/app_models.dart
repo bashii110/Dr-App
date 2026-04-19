@@ -40,6 +40,10 @@ class DoctorModel {
   final String? availableFrom;
   final String? availableTo;
 
+
+
+
+
   DoctorModel({
     required this.id,
     required this.docId,

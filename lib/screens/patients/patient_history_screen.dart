@@ -3,8 +3,6 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../components/custom_widget.dart';
 import '../../models/app_models.dart';
 import '../../service/api_service.dart';
-import '../../utils/config.dart';
-
 
 class PatientHistoryScreen extends StatefulWidget {
   const PatientHistoryScreen({super.key});
@@ -12,15 +10,24 @@ class PatientHistoryScreen extends StatefulWidget {
   State<PatientHistoryScreen> createState() => _PatientHistoryScreenState();
 }
 
-class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
-  List<AppointmentModel> _completed  = [];
-  List<AppointmentModel> _cancelled  = [];
+class _PatientHistoryScreenState extends State<PatientHistoryScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabs;
+  List<AppointmentModel> _completed = [];
+  List<AppointmentModel> _cancelled = [];
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
+    _tabs = TabController(length: 2, vsync: this);
     _load();
+  }
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -42,55 +49,71 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: Config.bgColor,
-        appBar: AppBar(
-          title: const Text('Medical History'),
-          bottom: const TabBar(
-            labelColor: Config.primaryColor,
-            unselectedLabelColor: Config.textMid,
-            indicatorColor: Config.primaryColor,
-            tabs: [
-              Tab(text: 'Completed'),
-              Tab(text: 'Cancelled'),
-            ],
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0E1A),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0A0E1A),
+        elevation: 0,
+        title: const Text('Medical History',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w700)),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.06),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.10)),
+            ),
+            child: TabBar(
+              controller: _tabs,
+              indicatorColor: const Color(0xFF1D9E75),
+              indicatorWeight: 2,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white.withOpacity(0.4),
+              labelStyle: const TextStyle(
+                  fontWeight: FontWeight.w700, fontSize: 13),
+              indicatorPadding:
+              const EdgeInsets.symmetric(horizontal: 8),
+              tabs: const [Tab(text: 'Completed'), Tab(text: 'Cancelled')],
+            ),
           ),
         ),
-        body: _loading
-            ? const Padding(
-            padding: EdgeInsets.all(20), child: ShimmerList())
-            : TabBarView(
-          children: [
-            _AppointmentList(
-              items: _completed,
-              emptyMessage: 'No completed appointments yet.',
-              showReview: true,
-              onRefresh: _load,
-            ),
-            _AppointmentList(
-              items: _cancelled,
-              emptyMessage: 'No cancelled appointments.',
-              onRefresh: _load,
-            ),
-          ],
-        ),
+      ),
+      body: _loading
+          ? const Center(child: _DarkShimmerList())
+          : TabBarView(
+        controller: _tabs,
+        children: [
+          _HistoryList(
+            items: _completed,
+            emptyMessage: 'No completed appointments yet.',
+            showReview: true,
+            onRefresh: _load,
+          ),
+          _HistoryList(
+            items: _cancelled,
+            emptyMessage: 'No cancelled appointments.',
+            onRefresh: _load,
+          ),
+        ],
       ),
     );
   }
 }
 
-// ── List widget ───────────────────────────────────────────────────────────
+// ── History list ──────────────────────────────────────────────────────────
 
-class _AppointmentList extends StatelessWidget {
-  const _AppointmentList({
+class _HistoryList extends StatelessWidget {
+  const _HistoryList({
     required this.items,
     required this.emptyMessage,
     this.showReview = false,
     required this.onRefresh,
   });
-
   final List<AppointmentModel> items;
   final String emptyMessage;
   final bool showReview;
@@ -99,29 +122,37 @@ class _AppointmentList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
-      return EmptyState(
-        message: emptyMessage,
-        icon: Icons.history_outlined,
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.history_outlined,
+                size: 56, color: Colors.white.withOpacity(0.15)),
+            const SizedBox(height: 16),
+            Text(emptyMessage,
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.35),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500)),
+          ],
+        ),
       );
     }
     return RefreshIndicator(
       onRefresh: onRefresh,
+      color: const Color(0xFF1A73E8),
+      backgroundColor: const Color(0xFF141829),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: items.length,
-        itemBuilder: (_, i) {
-          final appt = items[i];
-          return _HistoryCard(
-            appointment: appt,
-            showReview: showReview,
-          );
-        },
+        itemBuilder: (_, i) =>
+            _HistoryCard(appointment: items[i], showReview: showReview),
       ),
     );
   }
 }
 
-// ── History card with review CTA ──────────────────────────────────────────
+// ── History card ──────────────────────────────────────────────────────────
 
 class _HistoryCard extends StatefulWidget {
   const _HistoryCard({required this.appointment, this.showReview = false});
@@ -139,7 +170,7 @@ class _HistoryCardState extends State<_HistoryCard> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF141829),
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _ReviewSheet(
@@ -149,130 +180,181 @@ class _HistoryCardState extends State<_HistoryCard> {
     );
   }
 
+  static const _statusConfig = {
+    'completed': {
+      'color': Color(0xFF1D9E75),
+      'bg': Color(0xFF0A1F18),
+      'label': 'Completed'
+    },
+    'cancelled': {
+      'color': Color(0xFFE24B4A),
+      'bg': Color(0xFF2A0F0F),
+      'label': 'Cancelled'
+    },
+  };
+
   @override
   Widget build(BuildContext context) {
     final a = widget.appointment;
     final doctorName = a.doctor?.name ?? 'Doctor';
-    final category   = a.doctor?.category ?? '';
+    final category = a.doctor?.category ?? '';
+    final cfg = _statusConfig[a.status] ?? _statusConfig['completed']!;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Config.dividerColor),
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.09)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Row(
               children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Config.primaryColor.withOpacity(0.1),
-                  child: Text(
-                    doctorName[0].toUpperCase(),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: Config.primaryColor,
-                        fontSize: 18),
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF1A73E8).withOpacity(0.8),
+                        const Color(0xFF00CEC9).withOpacity(0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(doctorName[0].toUpperCase(),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 20)),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Dr $doctorName',
                           style: const TextStyle(
+                              color: Colors.white,
                               fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                              color: Config.textDark)),
-                      if (category.isNotEmpty)
+                              fontSize: 15)),
+                      if (category.isNotEmpty) ...[
+                        const SizedBox(height: 3),
                         Text(category,
                             style: const TextStyle(
-                                fontSize: 12, color: Config.textMid)),
+                                color: Color(0xFF1A73E8),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12)),
+                      ],
                     ],
                   ),
                 ),
-                StatusBadge(status: a.status),
+                Container(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: cfg['bg'] as Color,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color:
+                        (cfg['color'] as Color).withOpacity(0.35)),
+                  ),
+                  child: Text(cfg['label'] as String,
+                      style: TextStyle(
+                          color: cfg['color'] as Color,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11)),
+                ),
               ],
             ),
-            const SizedBox(height: 12),
-            const Divider(height: 1),
-            const SizedBox(height: 12),
-
-            // Date / time / fee row
+            const SizedBox(height: 14),
+            Container(height: 0.5, color: Colors.white.withOpacity(0.08)),
+            const SizedBox(height: 14),
             Wrap(
               spacing: 16,
-              runSpacing: 6,
+              runSpacing: 8,
               children: [
                 _chip(Icons.calendar_today_outlined, a.appointmentDate),
-                _chip(Icons.access_time_outlined,    a.appointmentTime),
+                _chip(Icons.access_time_outlined, a.appointmentTime),
                 if (a.consultationFee > 0)
                   _chip(Icons.payments_outlined,
                       'Rs ${a.consultationFee.toInt()}'),
               ],
             ),
-
             if (a.notes != null && a.notes!.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Config.bgColor,
-                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.notes_outlined,
-                        size: 14, color: Config.textMid),
+                    Icon(Icons.notes_outlined,
+                        size: 13, color: Colors.white.withOpacity(0.35)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(a.notes!,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12,
-                              color: Config.textMid,
+                              color: Colors.white.withOpacity(0.45),
                               fontStyle: FontStyle.italic)),
                     ),
                   ],
                 ),
               ),
             ],
-
-            // Review button — only for completed appointments
             if (widget.showReview && a.isCompleted) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               _reviewed
                   ? Row(
-                children: const [
+                children: [
                   Icon(Icons.check_circle_outline,
-                      size: 16, color: Config.secondaryColor),
-                  SizedBox(width: 6),
-                  Text('Review submitted',
+                      size: 15,
+                      color: const Color(0xFF1D9E75)),
+                  const SizedBox(width: 6),
+                  const Text('Review submitted',
                       style: TextStyle(
-                          color: Config.secondaryColor,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600)),
+                          color: Color(0xFF1D9E75),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13)),
                 ],
               )
-                  : SizedBox(
-                width: double.infinity,
-                height: 38,
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.rate_review_outlined, size: 16),
-                  label: const Text('Write a Review'),
-                  onPressed: _openReviewSheet,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Config.primaryColor,
-                    side: const BorderSide(color: Config.primaryColor),
-                    padding: EdgeInsets.zero,
-                    textStyle: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 13),
+                  : GestureDetector(
+                onTap: _openReviewSheet,
+                child: Container(
+                  width: double.infinity,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A73E8).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color:
+                        const Color(0xFF1A73E8).withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.rate_review_outlined,
+                          size: 15,
+                          color: const Color(0xFF378ADD)),
+                      const SizedBox(width: 6),
+                      const Text('Write a Review',
+                          style: TextStyle(
+                              color: Color(0xFF378ADD),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13)),
+                    ],
                   ),
                 ),
               ),
@@ -286,21 +368,20 @@ class _HistoryCardState extends State<_HistoryCard> {
   Widget _chip(IconData icon, String text) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Icon(icon, size: 13, color: Config.textMid),
+      Icon(icon, size: 13, color: Colors.white.withOpacity(0.35)),
       const SizedBox(width: 4),
       Text(text,
-          style: const TextStyle(fontSize: 12, color: Config.textMid)),
+          style: TextStyle(
+              fontSize: 12, color: Colors.white.withOpacity(0.5))),
     ],
   );
 }
 
-// ── Review bottom sheet ───────────────────────────────────────────────────
+// ── Review sheet ──────────────────────────────────────────────────────────
 
 class _ReviewSheet extends StatefulWidget {
-  const _ReviewSheet({
-    required this.appointment,
-    required this.onSubmitted,
-  });
+  const _ReviewSheet(
+      {required this.appointment, required this.onSubmitted});
   final AppointmentModel appointment;
   final VoidCallback onSubmitted;
 
@@ -319,16 +400,23 @@ class _ReviewSheetState extends State<_ReviewSheet> {
     super.dispose();
   }
 
+  static const _labels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+
   Future<void> _submit() async {
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a star rating.')),
+        SnackBar(
+          content: const Text('Please select a star rating.'),
+          backgroundColor: const Color(0xFF1C2333),
+          behavior: SnackBarBehavior.floating,
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
       return;
     }
     final doctorId = widget.appointment.doctor?.id;
     if (doctorId == null) return;
-
     setState(() => _loading = true);
     try {
       final res = await ApiService.submitReview(
@@ -342,76 +430,68 @@ class _ReviewSheetState extends State<_ReviewSheet> {
         Navigator.pop(context);
         widget.onSubmitted();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Review submitted. Thank you!'),
-            backgroundColor: Config.secondaryColor,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(res['message'] as String? ?? 'Submission failed.'),
-            backgroundColor: Config.errorColor,
+            content: const Text('Review submitted. Thank you!'),
+            backgroundColor: const Color(0xFF0A1F18),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
     } catch (_) {
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Connection error.')),
-      );
     }
   }
-
-  static const _labels = [
-    '', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'
-  ];
 
   @override
   Widget build(BuildContext context) {
     final doctorName = widget.appointment.doctor?.name ?? 'Doctor';
-
     return Padding(
       padding: EdgeInsets.fromLTRB(
           24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle bar
           Container(
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Config.dividerColor,
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: 20),
-
-          // Doctor avatar
-          CircleAvatar(
-            radius: 32,
-            backgroundColor: Config.primaryColor.withOpacity(0.1),
-            child: Text(
-              doctorName[0].toUpperCase(),
-              style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 24,
-                  color: Config.primaryColor),
+          const SizedBox(height: 24),
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1A73E8), Color(0xFF00CEC9)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Center(
+              child: Text(doctorName[0].toUpperCase(),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 24)),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Text('Dr $doctorName',
               style: const TextStyle(
+                  color: Colors.white,
                   fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Config.textDark)),
+                  fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
-          const Text('How was your experience?',
-              style: TextStyle(color: Config.textMid, fontSize: 14)),
+          Text('How was your experience?',
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.45), fontSize: 14)),
           const SizedBox(height: 24),
-
-          // Star rating
           RatingBar.builder(
             initialRating: _rating,
             minRating: 1,
@@ -419,7 +499,7 @@ class _ReviewSheetState extends State<_ReviewSheet> {
             itemSize: 44,
             glow: false,
             itemBuilder: (_, __) =>
-            const Icon(Icons.star_rounded, color: Color(0xFFFFA000)),
+            const Icon(Icons.star_rounded, color: Color(0xFFEF9F27)),
             onRatingUpdate: (r) => setState(() => _rating = r),
           ),
           const SizedBox(height: 8),
@@ -431,28 +511,110 @@ class _ReviewSheetState extends State<_ReviewSheet> {
               style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFFFFA000)),
+                  color: Color(0xFFEF9F27)),
             ),
           ),
           const SizedBox(height: 20),
-
-          // Comment
-          TextField(
-            controller: _commentCtrl,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              hintText:
-              'Tell others about your experience (optional)…',
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.06),
+              borderRadius: BorderRadius.circular(14),
+              border:
+              Border.all(color: Colors.white.withOpacity(0.12)),
+            ),
+            child: TextField(
+              controller: _commentCtrl,
+              maxLines: 3,
+              style: const TextStyle(color: Colors.black, fontSize: 14),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.all(14),
+                hintText:
+                'Tell others about your experience (optional)…',
+                hintStyle: TextStyle(
+                    color: Colors.grey.withOpacity(0.7), fontSize: 14),
+              ),
             ),
           ),
           const SizedBox(height: 20),
-
-          PrimaryButton(
-            label: 'Submit Review',
-            loading: _loading,
-            onPressed: _submit,
+          GestureDetector(
+            onTap: _loading ? null : _submit,
+            child: Container(
+              width: double.infinity,
+              height: 50,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1A73E8), Color(0xFF1565C0)],
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: _loading
+                    ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        color: Colors.white, strokeWidth: 2))
+                    : const Text('Submit Review',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15)),
+              ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Shimmer ───────────────────────────────────────────────────────────────
+
+class _DarkShimmerList extends StatefulWidget {
+  const _DarkShimmerList({this.count = 4});
+  final int count;
+
+  @override
+  State<_DarkShimmerList> createState() => _DarkShimmerListState();
+}
+
+class _DarkShimmerListState extends State<_DarkShimmerList>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1200))
+      ..repeat(reverse: true);
+    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: widget.count,
+      itemBuilder: (_, __) => AnimatedBuilder(
+        animation: _anim,
+        builder: (_, __) => Container(
+          height: 130,
+          margin: const EdgeInsets.only(bottom: 14),
+          decoration: BoxDecoration(
+            color: Color.lerp(const Color(0xFF1C2333),
+                const Color(0xFF232B40), _anim.value),
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
       ),
     );
   }
