@@ -7,7 +7,7 @@ class ApiService {
   // For Android emulator use: http://10.0.2.2:8000
   // For physical device on same WiFi: http://YOUR_PC_IP:8000
   // For production: https://yourdomain.com
-  static const String _base = 'http://192.168.100.21:8000/api';
+  static const String _base = 'http://10.127.114.166:8000/api';
   static const Duration _timeout = Duration(seconds: 15);
 
   // ── Token helpers ─────────────────────────────────────────────────────────

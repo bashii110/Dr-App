@@ -46,7 +46,7 @@ class _DoctorProfileEditScreenState extends State<DoctorProfileEditScreen> {
       _category = profile['category'] as String?;
       _status = profile['status'] as String? ?? 'available';
       _bioCtrl.text = profile['bio_data'] as String? ?? '';
-      _feeCtrl.text = (profile['consultation_fee'] ?? '').toString();
+      _feeCtrl.text = (profile['fee'] ?? '').toString();
       _expCtrl.text = (profile['experience'] ?? '').toString();
       final from = profile['available_from'] as String?;
       final to = profile['available_to'] as String?;
@@ -94,7 +94,7 @@ class _DoctorProfileEditScreenState extends State<DoctorProfileEditScreen> {
       final res = await ApiService.updateDoctorProfile({
         if (_category != null) 'category': _category,
         'bio_data': _bioCtrl.text.trim(),
-        'consultation_fee': double.tryParse(_feeCtrl.text) ?? 0,
+        'fee': double.tryParse(_feeCtrl.text) ?? 0,
         'experience': int.tryParse(_expCtrl.text) ?? 0,
         'status': _status,
         'available_from': _fmt(_availFrom),
@@ -111,6 +111,7 @@ class _DoctorProfileEditScreenState extends State<DoctorProfileEditScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ));
       if (res['status'] == 200) Navigator.pop(context);
+      await context.read<AuthProvider>().refreshUser();
     } catch (_) {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Connection error.')));

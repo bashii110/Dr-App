@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import '../models/app_models.dart';
 import '../service/api_service.dart';
@@ -21,52 +19,34 @@ class AuthProvider extends ChangeNotifier {
   // ── Startup ───────────────────────────────────────────────────────────────
 
   Future<void> checkAuth() async {
-    _status = AuthStatus.unknown;
-    notifyListeners();
-
     final token = await ApiService.getToken();
-
-    if (token == null) {
-      _status = AuthStatus.unauthenticated;
-      notifyListeners();
-      return;
-    }
-
+    if (token == null) { _status = AuthStatus.unauthenticated; notifyListeners(); return; }
     try {
       final res = await ApiService.getMe();
-
       if (res['status'] == 200) {
-        final userData = res['user'];
-        if (userData != null) {
-          _user   = UserModel.fromJson(userData as Map<String, dynamic>);
-          _status = AuthStatus.authenticated;
-        } else {
-          await ApiService.clearSession();
-          _user   = null;
-          _status = AuthStatus.unauthenticated;
-        }
-      } else if (res['status'] == 401) {
-        // Token expired or invalid
-        await ApiService.clearSession();
-        _user   = null;
-        _status = AuthStatus.unauthenticated;
+        _user   = UserModel.fromJson(res['user'] as Map<String, dynamic>);
+        _status = AuthStatus.authenticated;
       } else {
-        // Other server error — keep user logged in if token exists
-        // to avoid logging out on temporary server issues
+        await ApiService.clearSession();
         _status = AuthStatus.unauthenticated;
       }
-    } on TimeoutException {
-      // Network timeout — don't clear session, just mark unauthenticated
-      // user can retry by reopening app
-      _user   = null;
+    } catch (_) {
       _status = AuthStatus.unauthenticated;
-    } catch (e) {
-      // Unknown error — clear session to be safe
-      await ApiService.clearSession();
-      _user   = null;
-      _status = AuthStatus.unauthenticated;
-    } finally {
-      notifyListeners();
+    }
+    notifyListeners();
+  }
+
+  // ── Refresh user (call after profile edit to update in-memory data) ───────
+
+  Future<void> refreshUser() async {
+    try {
+      final res = await ApiService.getMe();
+      if (res['status'] == 200) {
+        _user = UserModel.fromJson(res['user'] as Map<String, dynamic>);
+        notifyListeners();
+      }
+    } catch (_) {
+      // fail silently — UI still works with stale data
     }
   }
 
@@ -83,7 +63,7 @@ class AuthProvider extends ChangeNotifier {
       final res = await ApiService.register(
           name: name, email: email, password: password, type: type);
       _setLoading(false);
-      if (res['status'] == 200) return true;
+      if (res['status'] == 200 || res['status'] == 201) return true;
       _error = _parseMsg(res['message']);
       notifyListeners();
       return false;

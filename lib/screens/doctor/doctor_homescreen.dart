@@ -190,6 +190,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen>
   };
   bool _loading = true;
 
+
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeAnim;
 

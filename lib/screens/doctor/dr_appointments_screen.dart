@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../components/custom_widget.dart';
+import 'package:provider/provider.dart';
 import '../../models/app_models.dart';
+import '../../provider/auth_provider.dart';
 import '../../service/api_service.dart';
+
 
 const _bg = Color(0xFF0A0E1A);
 const _card = Color(0xFF141829);
@@ -21,12 +23,16 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen>
   final _labels = ['Pending', 'Confirmed', 'Completed', 'Cancelled'];
   List<AppointmentModel> _all = [];
   bool _loading = true;
+  
+
 
   @override
   void initState() {
     super.initState();
     _tabs = TabController(length: _statuses.length, vsync: this);
     _load();
+
+
   }
 
   @override
@@ -34,6 +40,7 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen>
     _tabs.dispose();
     super.dispose();
   }
+
 
   Future<void> _load() async {
     setState(() => _loading = true);
@@ -56,6 +63,7 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen>
     final res = await ApiService.updateAppointmentStatus(id, status);
     if (!mounted) return;
     if (res['status'] == 200) {
+      await context.read<AuthProvider>().refreshUser();
       _load();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -71,7 +71,7 @@ class DoctorModel {
       status:          j['status'] ?? '',
       rating:          (j['rating'] as num?)?.toDouble() ?? 0,
       ratingCount:     j['rating_count'] as int? ?? 0,
-      consultationFee: (j['consultation_fee'] as num?)?.toDouble() ??
+      consultationFee: (j['fee'] as num?)?.toDouble() ??
           (j['fee'] as num?)?.toDouble() ?? 0,
       availableFrom:   j['available_from'] as String?,
       availableTo:     j['available_to'] as String?,

@@ -729,13 +729,13 @@ class _BookingScreenState extends State<BookingScreen>
       child: TextField(
         controller: _notesCtrl,
         maxLines: 3,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
+        style: const TextStyle(color: Colors.black87, fontSize: 14),
         decoration: InputDecoration(
           border: InputBorder.none,
           contentPadding: const EdgeInsets.all(16),
           hintText: 'Describe your symptoms or reason for visit…',
           hintStyle: TextStyle(
-              color: Colors.white.withOpacity(0.3), fontSize: 14),
+              color: Colors.grey.withOpacity(0.7), fontSize: 14),
         ),
       ),
     );

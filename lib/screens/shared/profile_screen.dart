@@ -129,7 +129,7 @@ class ProfileScreen extends StatelessWidget {
                   _InfoRow(Icons.work_outline, 'Experience',
                       '${user.profile!['experience'] ?? 0} years'),
                   _InfoRow(Icons.payments_outlined, 'Consultation fee',
-                      'Rs ${(user.profile!['consultation_fee'] ?? 0).toInt()}'),
+                      'Rs ${(user.profile!['fee'] ?? 0)}'),
                   _InfoRow(Icons.access_time_outlined, 'Available',
                       '${user.profile!['available_from'] ?? '--'} – ${user.profile!['available_to'] ?? '--'}'),
                 ],
