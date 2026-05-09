@@ -120,16 +120,20 @@ Book appointments. Manage schedules. Review doctors. All in one place.
 ---
 
 ## 📱 Screens
-<img width="80" height="150" alt="WhatsApp Image 2026-05-09 at 8 56 20 AM (2)" src="https://github.com/user-attachments/assets/85de2688-246b-4b7a-9a54-e3a959f0da77" />
-<img width="80" height="150" alt="WhatsApp Image 2026-05-09 at 8 56 20 AM (1)" src="https://github.com/user-attachments/assets/46bc6739-f434-4d2f-a175-16472122c545" />
-<img width="80" height="150" alt="WhatsApp Image 2026-05-09 at 8 56 18 AM" src="https://github.com/user-attachments/assets/6cdb21ea-f09f-4b83-ba79-1bf6f2526ec9" />
-<img width="80" height="150" alt="WhatsApp Image 2026-05-09 at 8 56 22 AM" src="https://github.com/user-attachments/assets/bf8e0e3f-d92f-4a55-b4a7-75d92698f007" />
-<img width="80" height="150" alt="WhatsApp Image 2026-05-09 at 8 56 22 AM (1)" src="https://github.com/user-attachments/assets/16e3c748-f2d4-48f0-88a9-0a2a015c268a" />
-<img width="80" height="150" alt="WhatsApp Image 2026-05-09 at 8 56 21 AM" src="https://github.com/user-attachments/assets/288da965-72a1-4158-85e0-b25a0af2d469" />
-<img width="80" height="150" alt="WhatsApp Image 2026-05-09 at 8 56 21 AM (2)" src="https://github.com/user-attachments/assets/0dc06f53-869b-405c-8f9b-9e706b8fb760" />
-<img width="80" height="150" alt="WhatsApp Image 2026-05-09 at 8 56 21 AM (1)" src="https://github.com/user-attachments/assets/f429bad1-c575-429b-934f-8e8debfb619b" />
-<img width="80" height="150" alt="WhatsApp Image 2026-05-09 at 8 56 20 AM" src="https://github.com/user-attachments/assets/5ebbeeb8-3054-44fa-8ab3-68197c8f8b9a" />
 
+<table>
+  <tr>
+    <td><img width="80" src="https://github.com/user-attachments/assets/85de2688-246b-4b7a-9a54-e3a959f0da77" /></td>
+    <td><img width="80" src="https://github.com/user-attachments/assets/46bc6739-f434-4d2f-a175-16472122c545" /></td>
+    <td><img width="80" src="https://github.com/user-attachments/assets/6cdb21ea-f09f-4b83-ba79-1bf6f2526ec9" /></td>
+    <td><img width="80" src="https://github.com/user-attachments/assets/bf8e0e3f-d92f-4a55-b4a7-75d92698f007" /></td>
+    <td><img width="80" src="https://github.com/user-attachments/assets/16e3c748-f2d4-48f0-88a9-0a2a015c268a" /></td>
+    <td><img width="80" src="https://github.com/user-attachments/assets/288da965-72a1-4158-85e0-b25a0af2d469" /></td>
+    <td><img width="80" src="https://github.com/user-attachments/assets/0dc06f53-869b-405c-8f9b-9e706b8fb760" /></td>
+    <td><img width="80" src="https://github.com/user-attachments/assets/f429bad1-c575-429b-934f-8e8debfb619b" /></td>
+    <td><img width="80" src="https://github.com/user-attachments/assets/5ebbeeb8-3054-44fa-8ab3-68197c8f8b9a" /></td>
+  </tr>
+</table>
 
 <details>
 <summary><strong>🔐 Auth Flow</strong></summary>
