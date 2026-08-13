@@ -1,11 +1,10 @@
 import 'dart:async';
+import 'package:doctor_app/auth/reset_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
 import 'login_screen.dart';
-import '../components/custom_widget.dart';
 import '../provider/auth_provider.dart';
-import '../utils/config.dart';
 
 const _bg = Color(0xFF0A0E1A);
 const _card = Color(0xFF141829);
@@ -13,8 +12,9 @@ const _accent = Color(0xFF1A73E8);
 const _accentTeal = Color(0xFF00CEC9);
 
 class OtpScreen extends StatefulWidget {
-  const OtpScreen({super.key, required this.email});
+  const OtpScreen({super.key, required this.email, this.purpose = 'verification',});
   final String email;
+  final String purpose;
   @override
   State<OtpScreen> createState() => _OtpScreenState();
 }
@@ -62,22 +62,47 @@ class _OtpScreenState extends State<OtpScreen> with SingleTickerProviderStateMix
 
   Future<void> _verify() async {
     if (_otpCtrl.text.length < 6) {
-      _snack('Enter the 6-digit code.');
+      _snack(
+        'Please enter the 6-digit code.',
+        error: true,
+      );
       return;
     }
+
     final auth = context.read<AuthProvider>();
-    final ok = await auth.verifyOtp(email: widget.email, otp: _otpCtrl.text);
+
+    final ok = await auth.verifyOtp(
+      email: widget.email,
+      otp: _otpCtrl.text,
+    );
+
     if (!mounted) return;
-    if (ok) {
-      _snack('Email verified! Please log in.', success: true);
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-            (_) => false,
+
+    if (!ok) {
+      _snack(
+        'Invalid or expired verification code.',
+        error: true,
       );
-    } else {
-      _snack(auth.error ?? 'Invalid code.', error: true);
+
+      // Clear incorrect OTP
+      _otpCtrl.clear();
+
+      return;
     }
+
+    // Keep your existing successful verification flow
+    _snack(
+      'Email verified! Please log in.',
+      success: true,
+    );
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const LoginScreen(),
+      ),
+          (_) => false,
+    );
   }
 
   Future<void> _resend() async {
@@ -182,23 +207,43 @@ class _OtpScreenState extends State<OtpScreen> with SingleTickerProviderStateMix
                     length: 6,
                     controller: _otpCtrl,
                     keyboardType: TextInputType.number,
+
                     animationType: AnimationType.scale,
+
+                    enableActiveFill: true,
+
+                    backgroundColor: Colors.transparent,
+
+                    cursorColor: _accentTeal,
+
+                    textStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
+
                     pinTheme: PinTheme(
                       shape: PinCodeFieldShape.box,
                       borderRadius: BorderRadius.circular(14),
+
                       fieldHeight: 58,
                       fieldWidth: 48,
-                      activeFillColor: Colors.white.withOpacity(0.08),
-                      selectedFillColor: _accent.withOpacity(0.12),
-                      inactiveFillColor: Colors.white.withOpacity(0.05),
+
+                      // DARK BACKGROUND
+                      inactiveFillColor: const Color(0xFF141829),
+                      activeFillColor: const Color(0xFF141829),
+                      selectedFillColor: const Color(0xFF18243D),
+
+                      // BORDERS
+                      inactiveColor: Colors.white.withOpacity(0.12),
                       activeColor: _accent,
                       selectedColor: _accentTeal,
-                      inactiveColor: Colors.white.withOpacity(0.15),
+
+                      borderWidth: 1.5,
                     ),
-                    textStyle: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w800, fontSize: 22),
-                    enableActiveFill: true,
+
                     onCompleted: (_) => _verify(),
+
                     onChanged: (_) {},
                   ),
                   const SizedBox(height: 32),

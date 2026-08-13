@@ -10,21 +10,39 @@ class AuthProvider extends ChangeNotifier {
   bool _loading = false;
   String? _error;
 
-  AuthStatus get status  => _status;
-  UserModel? get user    => _user;
-  bool       get loading => _loading;
-  String?    get error   => _error;
-  bool       get isDoctor => _user?.isDoctor ?? false;
+
+  AuthStatus get status => _status;
+
+  UserModel? get user => _user;
+
+  bool get loading => _loading;
+
+  String? get error => _error;
+
+  bool get isDoctor => _user?.isDoctor ?? false;
+
+
+  void resetAuthState() {
+    _loading = false;
+    _error = null;
+    _user = null;
+    _status = AuthStatus.unauthenticated;
+    notifyListeners();
+  }
 
   // ── Startup ───────────────────────────────────────────────────────────────
 
   Future<void> checkAuth() async {
     final token = await ApiService.getToken();
-    if (token == null) { _status = AuthStatus.unauthenticated; notifyListeners(); return; }
+    if (token == null) {
+      _status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return;
+    }
     try {
       final res = await ApiService.getMe();
       if (res['status'] == 200) {
-        _user   = UserModel.fromJson(res['user'] as Map<String, dynamic>);
+        _user = UserModel.fromJson(res['user'] as Map<String, dynamic>);
         _status = AuthStatus.authenticated;
       } else {
         await ApiService.clearSession();
@@ -59,17 +77,34 @@ class AuthProvider extends ChangeNotifier {
     required String type,
   }) async {
     _setLoading(true);
+    _error = null;
+
     try {
       final res = await ApiService.register(
-          name: name, email: email, password: password, type: type);
+        name: name,
+        email: email,
+        password: password,
+        type: type,
+      );
+
       _setLoading(false);
-      if (res['status'] == 200 || res['status'] == 201) return true;
-      _error = _parseMsg(res['message']);
+
+      if (res['status'] == 200 || res['status'] == 201) {
+        return true;
+      }
+
+      if (res['errors'] is Map) {
+        _error = _parseMsg(res['errors']);
+      } else {
+        _error = _parseMsg(res['message']);
+      }
+
       notifyListeners();
       return false;
     } catch (_) {
       _error = 'Connection error. Please check your network.';
       _setLoading(false);
+      notifyListeners();
       return false;
     }
   }
@@ -96,7 +131,9 @@ class AuthProvider extends ChangeNotifier {
     try {
       final res = await ApiService.resendOtp(email);
       return res['status'] == 200;
-    } catch (_) { return false; }
+    } catch (_) {
+      return false;
+    }
   }
 
   // ── Login ─────────────────────────────────────────────────────────────────
@@ -108,7 +145,7 @@ class AuthProvider extends ChangeNotifier {
       final res = await ApiService.login(email: email, password: password);
       _setLoading(false);
       if (res['status'] == 200) {
-        _user   = UserModel.fromJson(res['user'] as Map<String, dynamic>);
+        _user = UserModel.fromJson(res['user'] as Map<String, dynamic>);
         _status = AuthStatus.authenticated;
         notifyListeners();
         return true;
@@ -127,20 +164,113 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     await ApiService.logout();
-    _user   = null;
+    _user = null;
     _status = AuthStatus.unauthenticated;
     notifyListeners();
   }
 
-  void clearError() { _error = null; notifyListeners(); }
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  void _setLoading(bool v) { _loading = v; notifyListeners(); }
+  void _setLoading(bool v) {
+    _loading = v;
+    notifyListeners();
+  }
 
   String _parseMsg(dynamic m) {
     if (m is String) return m;
-    if (m is Map)    return m.values.expand((v) => v is List ? v : [v]).join('\n');
+    if (m is Map) return m.values.expand((v) => v is List ? v : [v]).join('\n');
     return 'An error occurred.';
+  }
+
+  resetPassword({
+    required String resetToken,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final result = await ApiService.resetPassword(
+        password: password,
+        passwordConfirmation: passwordConfirmation,
+        resetToken: resetToken,
+      );
+
+      if (result['status'] == 200 || result['status'] == 201) {
+        _loading = false;
+        notifyListeners();
+        return true;
+      }
+
+      _error = result['message']?.toString() ?? 'Password reset failed.';
+      _loading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Something went wrong. Please try again.';
+      _loading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+
+  // ── Password Reset OTP ─────────────────────────────────────────────────────
+
+  Future<String?> verifyResetOtp({
+    required String email,
+    required String otp,
+  }) async {
+    _setLoading(true);
+    _error = null;
+
+    try {
+      final result = await ApiService.verifyResetOtp(
+        email: email,
+        otp: otp,
+      );
+
+      _setLoading(false);
+
+      if (result['status'] == 200 &&
+          result['reset_token'] != null) {
+        return result['reset_token'].toString();
+      }
+
+      _error = _parseMsg(result['message']);
+      notifyListeners();
+      return null;
+    } catch (_) {
+      _error = 'Connection error. Please try again.';
+      _setLoading(false);
+      return null;
+    }
+  }
+
+  Future<bool> resendResetOtp(String email) async {
+    _error = null;
+
+    try {
+      final result = await ApiService.resendResetOtp(email);
+
+      if (result['status'] == 200) {
+        return true;
+      }
+
+      _error = _parseMsg(result['message']);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _error = 'Connection error. Please try again.';
+      notifyListeners();
+      return false;
+    }
   }
 }

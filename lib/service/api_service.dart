@@ -7,7 +7,7 @@ class ApiService {
   // For Android emulator use: http://10.0.2.2:8000
   // For physical device on same WiFi: http://YOUR_PC_IP:8000
   // For production: https://yourdomain.com
-  static const String _base = 'http://10.127.114.166:8000/api';
+  static const String _base = 'http://192.168.0.104:8000/api';
   static const Duration _timeout = Duration(seconds: 15);
 
   // ── Token helpers ─────────────────────────────────────────────────────────
@@ -67,26 +67,31 @@ class ApiService {
     required String name,
     required String email,
     required String password,
-    required String type, // 'patient' or 'doctor'
+    required String type,
     String? phone,
   }) async {
     try {
       final r = await http
           .post(
-        _uri('/register'),          // ✅ /api/register
+        _uri('/register'),
         headers: await _headers(),
         body: jsonEncode({
           'name': name,
           'email': email,
           'password': password,
+          'password_confirmation': password,
           'type': type,
           if (phone != null) 'phone': phone,
         }),
       )
           .timeout(_timeout);
+
       return _parse(r);
     } catch (e) {
-      return {'status': 500, 'message': 'Connection failed: $e'};
+      return {
+        'status': 500,
+        'message': 'Connection failed: $e',
+      };
     }
   }
 
@@ -181,18 +186,102 @@ class ApiService {
   }
 
   /// Forgot password — sends reset link/OTP to email.
+  /// Forgot password — sends reset OTP to email.
   static Future<Map<String, dynamic>> forgotPassword(String email) async {
     try {
       final r = await http
           .post(
-        _uri('/forgot-password'),   // ✅ /api/forgot-password
+        _uri('/forgot-password'),
         headers: await _headers(),
-        body: jsonEncode({'email': email}),
+        body: jsonEncode({
+          'email': email,
+        }),
       )
           .timeout(_timeout);
+
       return _parse(r);
     } catch (e) {
-      return {'status': 500, 'message': 'Connection failed: $e'};
+      return {
+        'status': 500,
+        'message': 'Connection failed: $e',
+      };
+    }
+  }
+
+  /// Reset password using email + OTP.
+  ///
+  /// POST /api/reset-password
+  static Future<Map<String, dynamic>> resetPassword({
+    required String resetToken,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      final r = await http
+          .post(
+        _uri('/reset-password'),
+        headers: await _headers(),
+        body: jsonEncode({
+          'reset_token': resetToken,
+          'password': password,
+          'password_confirmation': passwordConfirmation,
+        }),
+      )
+          .timeout(_timeout);
+
+      return _parse(r);
+    } catch (e) {
+      return {
+        'status': 500,
+        'message': 'Connection failed: $e',
+      };
+    }
+  }
+
+
+  static Future<Map<String, dynamic>> verifyResetOtp({
+    required String email,
+    required String otp,
+  }) async {
+    try {
+      final r = await http
+          .post(
+        _uri('/verify-reset-otp'),
+        headers: await _headers(),
+        body: jsonEncode({
+          'email': email,
+          'otp': otp,
+        }),
+      )
+          .timeout(_timeout);
+
+      return _parse(r);
+    } catch (e) {
+      return {
+        'status': 500,
+        'message': 'Connection failed: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> resendResetOtp(String email) async {
+    try {
+      final r = await http
+          .post(
+        _uri('/forgot-password'),
+        headers: await _headers(),
+        body: jsonEncode({
+          'email': email,
+        }),
+      )
+          .timeout(_timeout);
+
+      return _parse(r);
+    } catch (e) {
+      return {
+        'status': 500,
+        'message': 'Connection failed: $e',
+      };
     }
   }
 

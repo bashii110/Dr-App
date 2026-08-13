@@ -1,4 +1,5 @@
 import 'package:doctor_app/auth/register_screen.dart';
+import 'package:doctor_app/auth/reset_otp_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../components/custom_widget.dart';
@@ -135,34 +136,31 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
     FocusScope.of(context).unfocus();
 
-    final email    = _emailCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text;
 
     final auth = context.read<AuthProvider>();
-    final ok   = await auth.login(email: email, password: password);
+
+    final ok = await auth.login(
+      email: email,
+      password: password,
+    );
 
     if (!mounted) return;
 
     if (!ok) {
-      // Check if backend requires email verification
-      final rawRes = await ApiService.login(email: email, password: password);
-      if (rawRes['requires_verification'] == true) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => OtpScreen(email: email)),
-        );
-        return;
-      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(auth.error ?? 'Login failed.'),
+          content: Text(
+            auth.error ?? 'Login failed.',
+          ),
           backgroundColor: Colors.redAccent,
         ),
       );
     }
-    // On success: AuthProvider sets status=authenticated → _AuthRouter rebuilds
   }
 
   // ── Build ─────────────────────────────────────────────────────────────
@@ -409,47 +407,161 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   void _showForgotPassword(BuildContext context) {
-    final ctrl = TextEditingController();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: const Color(0xFF141829),
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(24),
+        ),
+      ),
+      builder: (sheetContext) {
+        return const _ForgotPasswordSheet();
+      },
+    );
+  }
+}
+
+// Forget Password Sheet
+
+class _ForgotPasswordSheet extends StatefulWidget {
+  const _ForgotPasswordSheet();
+
+  @override
+  State<_ForgotPasswordSheet> createState() => _ForgotPasswordSheetState();
+}
+
+class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
+  final TextEditingController _emailController = TextEditingController();
+
+  bool _loading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendResetLink() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      _showMessage('Please enter your email address.');
+      return;
+    }
+
+    if (!email.contains('@')) {
+      _showMessage('Please enter a valid email address.');
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+    });
+
+    final result = await ApiService.forgotPassword(email);
+
+    if (!mounted) return;
+
+    setState(() {
+      _loading = false;
+    });
+
+    final status = result['status'];
+    final message = result['message']?.toString();
+
+    debugPrint('FORGOT PASSWORD RESPONSE: $result');
+
+    if (status == 200 || status == 201) {
+      Navigator.of(context).pop();
+
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ResetOtpScreen(
+            email: email,
+          ),
+        ),
+      );
+
+      ScaffoldMessenger.of(
+        this.context,
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            message ??
+                'If an account exists, a password reset link has been sent.',
+          ),
+        ),
+      );
+    } else {
+      _showMessage(
+        message ?? 'Unable to send password reset link.',
+        error: true,
+      );
+    }
+  }
+
+  void _showMessage(String message, {bool error = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: error ? Colors.redAccent : null,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
-            24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+          24,
+          24,
+          24,
+          MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Reset password',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white)),
+            const Text(
+              'Reset password',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+
             const SizedBox(height: 8),
-            Text('Enter your email to receive a reset link.',
-                style: TextStyle(color: Colors.white.withOpacity(0.5))),
+
+            Text(
+              'Enter your email to receive a reset link.',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.5),
+              ),
+            ),
+
             const SizedBox(height: 16),
+
             _DarkTextField(
-              controller: ctrl,
+              controller: _emailController,
               label: 'Email',
               hint: 'you@example.com',
               icon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _sendResetLink(),
             ),
+
             const SizedBox(height: 16),
+
             _GradientButton(
               label: 'Send Reset Link',
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content:
-                      Text('Reset link sent if account exists.')),
-                );
-              },
+              loading: _loading,
+              onPressed: _loading ? null : _sendResetLink,
             ),
           ],
         ),
